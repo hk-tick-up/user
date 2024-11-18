@@ -1,0 +1,11 @@
+spring:
+    application:
+        name: user
+    datasource:
+        url: jdbc:mysql://localhost:3306/tickup
+        username: root
+        password: root
+    jpa:
+        hibernate:
+            ddl-auto: create
+        show-sql: true
