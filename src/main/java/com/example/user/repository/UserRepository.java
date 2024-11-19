@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("UPDATE User u SET u.deleteRequestAt = :deleteRequestAt WHERE u.id = :id")
     void updateDeleteRequestAt(@Param("id") String id,
                                @Param("deleteRequestAt") LocalDateTime deleteRequestAt);
+
+    boolean existsByNickname(String nickname);
 }

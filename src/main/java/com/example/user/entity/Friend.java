@@ -4,6 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(
+                name = "unique_user_friend",
+                columnNames = {"user", "friend"}
+        )
+})
 @Getter
 @Setter
 @Builder
@@ -20,11 +26,11 @@ public class Friend {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "friend_id")
+    @JoinColumn(name = "friend")
     private User friend;
 
     @Enumerated(EnumType.STRING)

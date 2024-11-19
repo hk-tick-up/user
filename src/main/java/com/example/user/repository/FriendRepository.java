@@ -7,17 +7,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FriendRepository extends JpaRepository<Friend, Long> {
-    List<Friend> getFriendsByUser(String userId);
+    Optional<Friend> findFriendByUserAndFriend(User user, User friend);
 
-    List<Friend> getFriendByUser(User user);
+    List<Friend> getFriendsByUserAndStatus(User user, Friend.Status status);
 
+    boolean existsByUserAndFriendAndStatus(User user, User friend, Friend.Status status);
 
-    // userId를 받아서 해당 유저에게 온 친구 요청 목록 조회
-    List<Friend> findByFriendIdAndStatus(String friendId, Friend.Status status);
+    Optional<Friend> findFriendByUserAndFriendAndStatus(User user, User friend, Friend.Status status);
 
-    // 또는 더 명확하게
-    @Query("SELECT f FROM Friend f WHERE f.friendId = :friendId AND f.status = :status")
-    List<Friend> findFriendRequestsByFriendId(@Param("friendId") String friendId, @Param("status") Friend.Status status);
+    void deleteFriendByUserAndFriendAndStatus(User user, User friend, Friend.Status status);
 }

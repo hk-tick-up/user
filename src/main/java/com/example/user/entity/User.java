@@ -36,12 +36,17 @@ public class User {
     private int point;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(updatable = false, name="created_at")
     private LocalDateTime createdAt;
     @Column(name = "delete_request_at")
     private LocalDateTime deleteRequestAt;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private Set<UserRole> roles = new HashSet<>();
+
+    public User(String id){
+        this.id = id;
+    }
 }

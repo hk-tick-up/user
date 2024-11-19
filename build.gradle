@@ -31,16 +31,20 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+//	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	implementation 'ch.qos.logback:logback-classic:1.5.6'
-	implementation 'ch.qos.logback:logback-core:1.5.6'
-	implementation 'org.slf4j:slf4j-api:2.1.0-alpha1'
+	implementation 'ch.qos.logback:logback-classic:1.5.8'
+	implementation 'ch.qos.logback:logback-core:1.5.8'
+	implementation 'org.slf4j:slf4j-api:2.0.16'
+
+	runtimeOnly 'com.mysql:mysql-connector-j'
 }
 
 dependencyManagement {
