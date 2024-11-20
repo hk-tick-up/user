@@ -10,14 +10,22 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private String urlPrefix = "/api/v1/users";
+    private final String urlPrefix = "/api/v1/users";
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors
+                        .configurationSource(corsConfigurationSource()) // 커스텀 CORS 설정
+                )
                 .csrf(csrf -> csrf.disable())  // CSRF 비활성화
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
@@ -58,6 +66,18 @@ public class SecurityConfig {
                             .permitAll();
                 });
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE")); // 허용할 메서드
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // 허용할 헤더
+        configuration.setAllowCredentials(true); // 인증 정보 포함 여부
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean

@@ -1,9 +1,8 @@
 package com.example.user.service;
 
 import com.example.user.dto.FriendDTO;
-import com.example.user.dto.RewardDTO;
-import com.example.user.dto.UserAccountDTO;
 import com.example.user.dto.UserNameDTO;
+import com.example.user.dto.UserSignupDTO;
 import com.example.user.entity.Friend;
 import com.example.user.entity.User;
 import com.example.user.repository.FriendRepository;
@@ -22,15 +21,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -42,17 +36,27 @@ public class UserServiceImpl implements UserDetailsService {
     private final FriendRepository friendRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public String signUp(User user) {
+    public String signUp(UserSignupDTO user) {
         // 중복 가입 막아야
-        if(userRepository.existsById(user.getId()))
+        if(userRepository.existsById(user.id()))
             return "Error: Duplicated User ID";
-        if(userRepository.existsByNickname(user.getNickname()))
+        if(userRepository.existsByNickname(user.nickname()))
             return "Error: Duplicated Nickname";
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.getRoles().add(User.UserRole.ROLE_USER);
+        User newUser = new User(
+                user.id(),
+                user.nickname(),
+                passwordEncoder.encode(user.password()),
+                user.age(),
+                user.gender(),
+                user.job(),
+                0,
+                null,
+                null,
+                new HashSet<>());
+        newUser.getRoles().add(User.UserRole.ROLE_USER);
 
-        User saved = userRepository.save(user);
+        User saved = userRepository.save(newUser);
         return "Info: Account Created at "+saved.getCreatedAt().toString();
     }
 
@@ -223,9 +227,15 @@ public class UserServiceImpl implements UserDetailsService {
         else return null;
     }
 
-    public UserNameDTO deleteFriendRequest(String userId, String friendId) {
-        friendRepository.deleteFriendByUserAndFriendAndStatus(new User(userId), new User(friendId), Friend.Status.REQUEST);
-        return new UserNameDTO(userId, friendId);
+    public UserNameDTO deleteFriendRequest(String userId, Long requestId) {
+        Optional<Friend> friendOptional = friendRepository.deleteFriendByIdAndStatus(requestId, Friend.Status.REQUEST);
+        if(friendOptional.isPresent()) {
+            Friend friend = friendOptional.get();
+            if(friend.getUser().getId().equals(userId)) {
+                return new UserNameDTO(friend.getFriend().getId(), friend.getFriend().getNickname());
+            }
+        }
+        return null;
     }
 
     public UserNameDTO deleteFriend(String userId, String friendId) {

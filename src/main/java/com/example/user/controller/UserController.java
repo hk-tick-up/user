@@ -1,35 +1,31 @@
 package com.example.user.controller;
 
 import com.example.user.dto.FriendDTO;
-import com.example.user.dto.RewardDTO;
-import com.example.user.dto.UserAccountDTO;
 import com.example.user.dto.UserNameDTO;
+import com.example.user.dto.UserSignupDTO;
 import com.example.user.entity.User;
 import com.example.user.service.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin
 @RequestMapping("/api/v1/users")
 public class UserController {
     private final UserServiceImpl userService;
+    private final DefaultAuthenticationEventPublisher authenticationEventPublisher;
 
     @PostMapping("/sign-up")
-    public String signUp(@RequestBody User user) {
+    public String signUp(@RequestBody UserSignupDTO user) {
         return userService.signUp(user);
     }
     // 로그인, 로그아웃은 Spring Security에서 처리
@@ -81,13 +77,13 @@ public class UserController {
         String userId = authentication.getName();
         return userService.acceptFriend(userId, friendId);
     }
-    @DeleteMapping("/friend-requests/{requestid}")
-    public UserNameDTO deleteFriendRequest(Authentication authentication, @RequestParam String friendId) {
+    @DeleteMapping("/friend-requests/{requestId}")
+    public UserNameDTO deleteFriendRequest(Authentication authentication, @PathVariable Long requestId) {
         String userId = authentication.getName();
-        return userService.deleteFriendRequest(userId, friendId);
+        return userService.deleteFriendRequest(userId, requestId);
     }
-    @DeleteMapping("/friends/{friendid}")
-    public UserNameDTO deleteFriend(Authentication authentication, @RequestParam String friendId) {
+    @DeleteMapping("/friends/{friendId}")
+    public UserNameDTO deleteFriend(Authentication authentication, @PathVariable String friendId) {
         String userId = authentication.getName();
         return userService.deleteFriend(userId, friendId);
     }
