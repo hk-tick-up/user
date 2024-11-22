@@ -16,18 +16,18 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         String token = resolveToken(request);
-
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String username = jwtTokenProvider.getUsername(token);
-            JwtAuthenticationToken authentication = new JwtAuthenticationToken(username, null, null);
+            JwtAuthenticationToken authentication = new JwtAuthenticationToken(
+                    username, jwtTokenProvider.getAuthorities(token)
+            );
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-
-        chain.doFilter(request, response);
+        filterChain.doFilter(request, response);
     }
 
     private String resolveToken(HttpServletRequest request) {

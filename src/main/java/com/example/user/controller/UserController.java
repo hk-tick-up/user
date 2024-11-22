@@ -2,6 +2,7 @@ package com.example.user.controller;
 
 import com.example.user.dto.FriendDTO;
 import com.example.user.dto.UserNameDTO;
+import com.example.user.dto.UserSigninDTO;
 import com.example.user.dto.UserSignupDTO;
 import com.example.user.entity.User;
 import com.example.user.service.UserServiceImpl;
@@ -27,6 +28,10 @@ public class UserController {
     @PostMapping("/sign-up")
     public String signUp(@RequestBody UserSignupDTO user) {
         return userService.signUp(user);
+    }
+    @PostMapping("/sign-in")
+    public String signIn(@RequestBody UserSigninDTO user) {
+        return userService.signIn(user);
     }
     // 로그인, 로그아웃은 Spring Security에서 처리
     @PostMapping("/duplicateid")

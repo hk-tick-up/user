@@ -3,6 +3,8 @@ package com.example.user.config.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -11,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -21,6 +24,12 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
     private final String urlPrefix = "/api/v1/users";
+    private final JwtTokenProvider jwtTokenProvider;
+
+    public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -29,7 +38,7 @@ public class SecurityConfig {
                 )
                 .csrf(csrf -> csrf.disable())  // CSRF 비활성화
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
                             urlPrefix+"/sign-in",
@@ -41,36 +50,13 @@ public class SecurityConfig {
                             ).permitAll()
                     .anyRequest().authenticated();
                 })
-                .formLogin(form -> {
-                    form.loginProcessingUrl(urlPrefix+"/sign-in")
-                            .successHandler((request, response, authentication) -> {
-                                response.setStatus(HttpStatus.OK.value());
-                                response.setContentType("application/json");  // 응답 형식을 JSON으로 설정
-                                response.getWriter().write(
-                                        "{\"message\": \"Successfully logged in\"}," +
-                                        "{\"id\": \""+authentication.getName()+"\"}");  // 메시지 반환
-                                response.flushBuffer();
-
-                                // 스레드 별로 SecurityContextHolder가 존재. 여기에 authentication 저장
-                                // 현재 authentication 클래스는 UsernamePasswordAuthenticationToken
-                                System.out.println(SecurityContextHolder.getContext());
-                            })
-                            .failureHandler((request, response, exception) -> {
-                                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                                response.setContentType("application/json");  // 응답 형식을 JSON으로 설정
-                                response.getWriter().write("{\"message\": \"Log in Failed\"}");  // 메시지 반환
-                                response.flushBuffer();
-                            });
-                })
-                .logout(logout -> {
-                    logout.logoutUrl(urlPrefix+"/sign-out")
-                            .logoutSuccessHandler((request, response, authentication) -> {
-                                response.setStatus(HttpStatus.OK.value());
-                                response.setContentType("application/json");  // 응답 형식을 JSON으로 설정
-                                response.getWriter().write("{\"message\": \"Successfully logged out\"}");  // 메시지 반환
-                                response.flushBuffer();
-                            })
-                            .permitAll();
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> {
+                    exceptions.authenticationEntryPoint((request, response, authException) -> {
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"message\": \"Unauthorized\"}");
+                    });
                 });
         return http.build();
     }
@@ -90,5 +76,10 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }

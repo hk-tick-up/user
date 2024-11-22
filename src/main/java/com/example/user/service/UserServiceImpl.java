@@ -1,7 +1,9 @@
 package com.example.user.service;
 
+import com.example.user.config.security.JwtTokenProvider;
 import com.example.user.dto.FriendDTO;
 import com.example.user.dto.UserNameDTO;
+import com.example.user.dto.UserSigninDTO;
 import com.example.user.dto.UserSignupDTO;
 import com.example.user.entity.Friend;
 import com.example.user.entity.User;
@@ -35,6 +37,7 @@ public class UserServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public String signUp(UserSignupDTO user) {
         // 중복 가입 막아야
@@ -58,6 +61,15 @@ public class UserServiceImpl implements UserDetailsService {
 
         User saved = userRepository.save(newUser);
         return "Info: Account Created at "+saved.getCreatedAt().toString();
+    }
+    public String signIn(UserSigninDTO userDTO) {
+        User user = userRepository.findById(userDTO.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        return jwtTokenProvider.createToken(user.getId(), user.getRoles());
     }
 
     public boolean byIdExist(String userId) {
