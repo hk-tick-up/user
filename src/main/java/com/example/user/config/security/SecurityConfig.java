@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -45,8 +46,14 @@ public class SecurityConfig {
                             .successHandler((request, response, authentication) -> {
                                 response.setStatus(HttpStatus.OK.value());
                                 response.setContentType("application/json");  // 응답 형식을 JSON으로 설정
-                                response.getWriter().write("{\"message\": \"Successfully logged in\"}");  // 메시지 반환
+                                response.getWriter().write(
+                                        "{\"message\": \"Successfully logged in\"}," +
+                                        "{\"id\": \""+authentication.getName()+"\"}");  // 메시지 반환
                                 response.flushBuffer();
+
+                                // 스레드 별로 SecurityContextHolder가 존재. 여기에 authentication 저장
+                                // 현재 authentication 클래스는 UsernamePasswordAuthenticationToken
+                                System.out.println(SecurityContextHolder.getContext());
                             })
                             .failureHandler((request, response, exception) -> {
                                 response.setStatus(HttpStatus.UNAUTHORIZED.value());

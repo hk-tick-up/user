@@ -258,4 +258,9 @@ public class UserServiceImpl implements UserDetailsService {
 //
 //    public int points(String userId) {
 //    }
+
+    public String getNickname(String userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        return optionalUser.map(User::getNickname).orElse(null);
+    }
 }
