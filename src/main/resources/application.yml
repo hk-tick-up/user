@@ -1,20 +1,21 @@
 server:
-    port: 8000
+    port: 8005
 spring:
     application:
         name: user
     datasource:
-        url: jdbc:mysql://localhost:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+        url: jdbc:mysql://localhost:3307/tickup
+        driver-class-name: com.mysql.cj.jdbc.Driver
         username: root
-        password: root
+        password: root123
     jpa:
         hibernate:
             ddl-auto: update
         show-sql: true
-        properties:
-            hibernate:
-                format_sql: true
-                dialect: org.hibernate.dialect.MySQLDialect
+#        properties:
+#            hibernate:
+#                format_sql: true
+#                dialect: org.hibernate.dialect.MySQLDialect
 logging:
     level:
         org:
