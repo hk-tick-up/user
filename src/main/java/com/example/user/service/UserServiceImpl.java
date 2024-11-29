@@ -1,10 +1,7 @@
 package com.example.user.service;
 
 import com.example.user.config.security.JwtTokenProvider;
-import com.example.user.dto.FriendDTO;
-import com.example.user.dto.UserNameDTO;
-import com.example.user.dto.UserSigninDTO;
-import com.example.user.dto.UserSignupDTO;
+import com.example.user.dto.*;
 import com.example.user.entity.Friend;
 import com.example.user.entity.User;
 import com.example.user.repository.FriendRepository;
@@ -16,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,6 +38,7 @@ public class UserServiceImpl implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Transactional
     public String signUp(UserSignupDTO user) {
         // 중복 가입 막아야
         if(userRepository.existsById(user.id()))
@@ -59,8 +59,14 @@ public class UserServiceImpl implements UserDetailsService {
                 new HashSet<>());
         newUser.getRoles().add(User.UserRole.ROLE_USER);
 
-        User saved = userRepository.save(newUser);
-        return "Info: Account Created at "+saved.getCreatedAt().toString();
+        try{
+            User saved = userRepository.save(newUser);
+            log.info("Account {} has been created", user.id());
+            return "Info: Account Created at "+saved.getCreatedAt().toString();
+        } catch(DataIntegrityViolationException e) {
+            log.error(e.getMessage());
+            return "Error: Duplicated User";
+        }
     }
     public String signIn(UserSigninDTO userDTO) {
         User user = userRepository.findById(userDTO.getId())
@@ -70,6 +76,22 @@ public class UserServiceImpl implements UserDetailsService {
         }
 
         return jwtTokenProvider.createToken(user.getId(), user.getRoles());
+    }
+    public UserNameDTO self(Authentication authentication, HttpServletRequest request, HttpServletResponse response){
+//        log.warn(authentication.toString());
+        // JwtAuthenticationToken [Principal=qwer, Credentials=[PROTECTED], Authenticated=true, Details=null, Granted Authorities=[ROLE_USER]]
+//        log.warn(request.toString());
+//        log.warn(response.toString());
+        String id = authentication.getName();
+        String nickname = userRepository.findById(id).get().getNickname();
+        return new UserNameDTO(id, nickname);
+    }
+    public int point(Authentication authentication) {
+        return userRepository.findById(authentication.getName()).get().getPoint();
+    }
+    public boolean verifyPassword(String id, String password) {
+        User user = userRepository.findById(id).get();
+        return passwordEncoder.matches(password, user.getPassword());
     }
 
     public boolean byIdExist(String userId) {
@@ -130,7 +152,7 @@ public class UserServiceImpl implements UserDetailsService {
         if (session == null) {
             log.warn("Session-after is invalid (logged out)");
         } else {
-            log.warn("Session-after is still active, session ID: " + session.getId());
+            log.warn("Session-after is still active, session ID: {}", session.getId());
         }
 
 
@@ -152,25 +174,29 @@ public class UserServiceImpl implements UserDetailsService {
         else return null;
     }
 
+    @Transactional
     public User updatePersonalInfromation(String userId, Map<String, String> request) {
-        User newUser = User.builder()
-                .id(request.get("userId"))
-                .nickname(request.get("nickname"))
-                .age(Integer.parseInt(request.get("age")))
-                .gender(User.Gender.valueOf(request.get("gender")))
-                .job(request.get("job"))
-                .build();
-        // 수정 불가능한 값
-        // gender, job -> 수정 X로 결정?
-        // password, point, createdAt, deleteRequestAt, roles
+        // nickname, password 만 수정 가능
         Optional<User> optionalUser = userRepository.findById(userId);
         if(optionalUser.isPresent()) {
-            User oldUser = optionalUser.get();
-            newUser.setPassword(oldUser.getPassword());
-            return userRepository.save(newUser);
+            User user = optionalUser.get();
+            String password = request.get("password");
+            String nickname = request.get("nickname");
+            if(!password.isEmpty()) {
+                user.setPassword(passwordEncoder.encode(password));
+            }
+            user.setNickname(nickname);
+            try{
+                return userRepository.save(user);
+            } catch (DataIntegrityViolationException e) {
+                log.error(e.getMessage());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
-        else return null;
+        return null;
     }
+
 
     public List<FriendDTO> friends(String userId) {
         User user = new User(userId);
@@ -189,6 +215,7 @@ public class UserServiceImpl implements UserDetailsService {
         return friendDTOs;
     }
 
+    @Transactional
     public FriendDTO requestNewFriend(String userId, String friendId) {
         Optional<Friend> optionalRelationship = friendRepository.findFriendByUserAndFriendAndStatus(new User(userId), new User(friendId), Friend.Status.REQUEST);
         if(optionalRelationship.isPresent()) {
@@ -209,8 +236,13 @@ public class UserServiceImpl implements UserDetailsService {
             relationship.setUser(new User(userId));
             relationship.setFriend(new User(friendId));
             relationship.setStatus(Friend.Status.REQUEST);
-            friendRepository.save(relationship);
-            return new FriendDTO(userId, friendId, Friend.Status.REQUEST);
+            try {
+                friendRepository.save(relationship);
+                return new FriendDTO(userId, friendId, Friend.Status.REQUEST);
+            } catch (DataIntegrityViolationException e) {
+                log.error(e.getMessage());
+                return null;
+            }
         }
     }
 
@@ -220,6 +252,7 @@ public class UserServiceImpl implements UserDetailsService {
         return getFriendDTOS(friendEntities);
     }
 
+    @Transactional
     public FriendDTO acceptFriend(String userId, String friendId) {
         // user friend
         // friend user
@@ -232,11 +265,15 @@ public class UserServiceImpl implements UserDetailsService {
             Friend ftu = friendToUser.get();
             utf.setStatus(Friend.Status.FRIEND);
             ftu.setStatus(Friend.Status.FRIEND);
-            friendRepository.save(utf);
-            friendRepository.save(ftu);
-            return new FriendDTO(utf.getFriend().getId(), utf.getFriend().getNickname(), utf.getStatus());
+            try {
+                friendRepository.save(utf);
+                friendRepository.save(ftu);
+                return new FriendDTO(utf.getFriend().getId(), utf.getFriend().getNickname(), utf.getStatus());
+            } catch (DataIntegrityViolationException e) {
+                log.error(e.getMessage());
+            }
         }
-        else return null;
+        return null;
     }
 
     public UserNameDTO deleteFriendRequest(String userId, Long requestId) {
@@ -275,4 +312,5 @@ public class UserServiceImpl implements UserDetailsService {
         Optional<User> optionalUser = userRepository.findById(userId);
         return optionalUser.map(User::getNickname).orElse(null);
     }
+
 }

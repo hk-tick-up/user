@@ -33,6 +33,18 @@ public class UserController {
     public String signIn(@RequestBody UserSigninDTO user) {
         return userService.signIn(user);
     }
+    @GetMapping("/self")
+    public UserNameDTO self(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
+        return userService.self(authentication, request, response);
+    }
+    @GetMapping("/point")
+    public int point(Authentication authentication) {
+        return userService.point(authentication);
+    }
+    @PostMapping("/verifypassword")
+    public boolean verifyPassword(Authentication authentication, @RequestBody Map<String, String> request) {
+        return userService.verifyPassword(authentication.getName(), request.get("password"));
+    }
     // 로그인, 로그아웃은 Spring Security에서 처리
     @PostMapping("/duplicateid")
     public boolean duplicateId(@RequestBody Map<String, String> request) {
@@ -49,12 +61,12 @@ public class UserController {
         return userService.deleteAccountRequest(authentication, request, response);
     }
 
-    @GetMapping("/")
+    @GetMapping("/userinfo")
     public User personalInformation(Authentication authentication) {
         String userId = authentication.getName();
         return userService.personalInfromation(userId);
     }
-    @PutMapping("/")
+    @PutMapping("/userinfo")
     public User updatePersonalInformation(Authentication authentication, @RequestBody Map<String, String> request) {
         String userId = authentication.getName();
         return userService.updatePersonalInfromation(userId, request);

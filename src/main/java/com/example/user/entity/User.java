@@ -25,6 +25,7 @@ public class User {
     }
     @Id
     private String id;
+    @Column(unique = true)
     @NonNull
     private String nickname;
     @NonNull
