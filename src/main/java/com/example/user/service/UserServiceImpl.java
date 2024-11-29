@@ -23,7 +23,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 
+import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -62,7 +64,7 @@ public class UserServiceImpl implements UserDetailsService {
         try{
             User saved = userRepository.save(newUser);
             log.info("Account {} has been created", user.id());
-            return "Info: Account Created at "+saved.getCreatedAt().toString();
+            return "Info: Account Created successfully";
         } catch(DataIntegrityViolationException e) {
             log.error(e.getMessage());
             return "Error: Duplicated User";
@@ -197,6 +199,20 @@ public class UserServiceImpl implements UserDetailsService {
         return null;
     }
 
+    public FriendDTO getUserFromString(String userId, String username) {
+        Optional<User> optionalUser = userRepository.findByNickname(username);
+        if(optionalUser.isPresent()) {
+            return getFriendDTOByOptionalUser(optionalUser.get(), userId);
+        }
+
+        Optional<User> optionalUser2 = userRepository.findById(username);
+        return optionalUser2.map(user -> getFriendDTOByOptionalUser(user, userId)).orElse(null);
+    }
+    private FriendDTO getFriendDTOByOptionalUser(User user, String userId) {
+        Optional<Friend> friendship = friendRepository.findFriendByUserAndFriend(new User(userId), new User(user.getId()));
+        return friendship.map(friend -> new FriendDTO(user.getId(), user.getNickname(), friend.getStatus()))
+                .orElseGet(() -> new FriendDTO(user.getId(), user.getNickname(), Friend.Status.NOTYET));
+    }
 
     public List<FriendDTO> friends(String userId) {
         User user = new User(userId);

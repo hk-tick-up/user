@@ -71,6 +71,11 @@ public class UserController {
         String userId = authentication.getName();
         return userService.updatePersonalInfromation(userId, request);
     }
+    @GetMapping("/username")
+    public FriendDTO getUserFromString(Authentication authentication, @RequestParam("user") String username) {
+        String userId = authentication.getName();
+        return userService.getUserFromString(userId, username);
+    }
 
     @GetMapping("/friends")
     public List<FriendDTO> friends(Authentication authentication) {
