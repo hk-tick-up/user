@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.lang.NonNull;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -30,7 +31,7 @@ public class User {
     private String nickname;
     @NonNull
     private String password;
-    private int age;
+    private LocalDate birthday;
     @Enumerated(EnumType.STRING)
     private Gender gender;
     private String job;

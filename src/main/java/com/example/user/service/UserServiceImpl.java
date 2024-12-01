@@ -48,17 +48,15 @@ public class UserServiceImpl implements UserDetailsService {
         if(userRepository.existsByNickname(user.nickname()))
             return "Error: Duplicated Nickname";
 
-        User newUser = new User(
-                user.id(),
-                user.nickname(),
-                passwordEncoder.encode(user.password()),
-                user.age(),
-                user.gender(),
-                user.job(),
-                0,
-                null,
-                null,
-                new HashSet<>());
+        User newUser = User.builder()
+                .id(user.id())
+                .nickname(user.nickname())
+                .password(passwordEncoder.encode(user.password()))
+                .birthday(user.birthday())
+                .gender(user.gender())
+                .job(user.job())
+                .point(0)
+                .build();
         newUser.getRoles().add(User.UserRole.ROLE_USER);
 
         try{
