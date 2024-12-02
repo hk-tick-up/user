@@ -14,6 +14,7 @@ import org.springframework.security.authentication.DefaultAuthenticationEventPub
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -57,8 +58,16 @@ public class UserController {
         return userService.byNicknameExist(nickname);
     }
     @DeleteMapping("/withdrawal")
-    public String withdrawal(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
-        return userService.deleteAccountRequest(authentication, request, response);
+    public String withdrawal(Authentication authentication) {
+        return userService.deleteAccountRequest(authentication);
+    }
+    @GetMapping("/withdrawal")
+    public LocalDateTime withdrawalAt(Authentication authentication) {
+        return userService.deleteAccountRequestedAt(authentication);
+    }
+    @PutMapping("/withdrawal")
+    public String cancelWithdrawal(Authentication authentication) {
+        return userService.cancelDeleteAccount(authentication);
     }
 
     @GetMapping("/userinfo")

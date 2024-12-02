@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -74,8 +75,9 @@ public class UserServiceImpl implements UserDetailsService {
         if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
+        boolean deletionRequested = user.getDeleteRequestAt() != null;
 
-        return jwtTokenProvider.createToken(user.getId(), user.getRoles());
+        return jwtTokenProvider.createToken(user.getId(), user.getRoles(), deletionRequested);
     }
     public UserNameDTO self(Authentication authentication, HttpServletRequest request, HttpServletResponse response){
 //        log.warn(authentication.toString());
@@ -118,50 +120,44 @@ public class UserServiceImpl implements UserDetailsService {
                 .build();
     }
 
-    public String deleteAccountRequest(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
-
-
-
-
-
-        HttpSession session1 = request.getSession(false); // false로 하면 세션이 없을 경우 새로 생성하지 않음
-        if (session1 == null) {
-            log.warn("Session-before is invalid (logged out)");
-        } else {
-            log.warn("Session-before is still active, session ID: " + session1.getId());
-        }
-
-
-
-
+    public String deleteAccountRequest(Authentication authentication) {
         String userId = authentication.getName();
         Optional<User> user = userRepository.findById(userId);
         if(user.isPresent()) {
             // 로그인 된 계정 삭제예정으로 등록
             userRepository.updateDeleteRequestAt(userId, LocalDateTime.now());
+            return "Info: Successfully Deleted Account";
         }
         else return "Error: User not found";
-
-        // 로그인 중인 계정 로그아웃
-        new Logout().logout(request, response, authentication);
-        // 원본은 로그아웃 엔드포인트로 리다이렉트 된다. (코드 종료 후 security의 체인에 의해 그렇다는 모양)
-//        new SecurityContextLogoutHandler().logout(request, response, authentication);
-
-
-        HttpSession session = request.getSession(false); // false로 하면 세션이 없을 경우 새로 생성하지 않음
-        if (session == null) {
-            log.warn("Session-after is invalid (logged out)");
-        } else {
-            log.warn("Session-after is still active, session ID: {}", session.getId());
-        }
-
-
-        return "Info: Successfully Deleted Account";
     }
 
-    public void deleteAccount(String id) {
-        // 일정 주기로 삭제 예정인 계정 탐색, 삭제
-        userRepository.deleteById(id);
+    public LocalDateTime deleteAccountRequestedAt(Authentication authentication) {
+        String userId = authentication.getName();
+        Optional<User> user = userRepository.findById(userId);
+        return user.map(User::getDeleteRequestAt).orElse(null);
+    }
+
+    public String cancelDeleteAccount(Authentication authentication){
+        String userId = authentication.getName();
+        Optional<User> user = userRepository.findById(userId);
+        if(user.isPresent()) {
+            userRepository.updateDeleteRequestAt(userId, null);
+            return "Info: Your account restored.";
+        }
+        else return null;
+    }
+
+    // 매일 자정 실행
+    // cron = "초 분 시 일 월 요일"
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void deleteExpiredAccounts() {
+        LocalDateTime thresholdDate = LocalDateTime.now().minusDays(7);
+        List<User> usersToDelete = userRepository.findAllByDeleteRequestAtBefore(thresholdDate);
+
+        for (User user : usersToDelete) {
+            userRepository.deleteById(user.getId());
+            System.out.println("Deleted user: " + user.getId());
+        }
     }
 
     public User personalInfromation(String userId) {
