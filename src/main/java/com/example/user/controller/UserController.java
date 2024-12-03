@@ -8,14 +8,16 @@ import com.example.user.entity.User;
 import com.example.user.service.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -30,8 +32,8 @@ public class UserController {
         return userService.signUp(user);
     }
     @PostMapping("/sign-in")
-    public String signIn(@RequestBody UserSigninDTO user) {
-        return userService.signIn(user);
+    public ResponseEntity<?> signIn(@RequestBody UserSigninDTO user, HttpServletRequest request) {
+        return userService.signIn(user, request);
     }
     @GetMapping("/self")
     public UserNameDTO self(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
@@ -104,6 +106,7 @@ public class UserController {
         String userId = authentication.getName();
         return userService.deleteFriend(userId, friendId);
     }
+
 
 //    @GetMapping("/rewards")
 //    public List<RewardDTO> rewards(Authentication authentication) {

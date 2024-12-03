@@ -20,4 +20,5 @@ public interface UserRepository extends JpaRepository<User, String> {
                                @Param("deleteRequestAt") LocalDateTime deleteRequestAt);
 
     boolean existsByNickname(String nickname);
+//    Optional<User> findById(String userId);
 }
