@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, String> {
@@ -20,5 +21,7 @@ public interface UserRepository extends JpaRepository<User, String> {
                                @Param("deleteRequestAt") LocalDateTime deleteRequestAt);
 
     boolean existsByNickname(String nickname);
-//    Optional<User> findById(String userId);
+
+    List<User> findAllByDeleteRequestAtBefore(LocalDateTime deleteRequestAtBefore);
+
 }

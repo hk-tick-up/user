@@ -17,7 +17,10 @@ import org.springframework.security.authentication.DefaultAuthenticationEventPub
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+
 import java.util.*;
+import java.time.LocalDateTime;
+
 
 @Slf4j
 @RestController
@@ -59,8 +62,16 @@ public class UserController {
         return userService.byNicknameExist(nickname);
     }
     @DeleteMapping("/withdrawal")
-    public String withdrawal(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
-        return userService.deleteAccountRequest(authentication, request, response);
+    public String withdrawal(Authentication authentication) {
+        return userService.deleteAccountRequest(authentication);
+    }
+    @GetMapping("/withdrawal")
+    public LocalDateTime withdrawalAt(Authentication authentication) {
+        return userService.deleteAccountRequestedAt(authentication);
+    }
+    @PutMapping("/withdrawal")
+    public String cancelWithdrawal(Authentication authentication) {
+        return userService.cancelDeleteAccount(authentication);
     }
 
     @GetMapping("/userinfo")
@@ -72,6 +83,11 @@ public class UserController {
     public User updatePersonalInformation(Authentication authentication, @RequestBody Map<String, String> request) {
         String userId = authentication.getName();
         return userService.updatePersonalInfromation(userId, request);
+    }
+    @GetMapping("/username")
+    public FriendDTO getUserFromString(Authentication authentication, @RequestParam("user") String username) {
+        String userId = authentication.getName();
+        return userService.getUserFromString(userId, username);
     }
 
     @GetMapping("/friends")

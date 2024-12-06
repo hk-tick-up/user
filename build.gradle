@@ -59,6 +59,8 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'me.xdrop:fuzzywuzzy:1.4.0'
+
 }
 
 dependencyManagement {

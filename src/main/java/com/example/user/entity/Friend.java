@@ -18,7 +18,7 @@ import lombok.*;
 @AllArgsConstructor
 public class Friend {
     public static enum Status {
-        FRIEND, REQUEST
+        FRIEND, REQUEST, NOTYET
     }
 
     @Id
