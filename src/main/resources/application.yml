@@ -4,12 +4,14 @@ spring:
     application:
         name: user
     datasource:
-        url: jdbc:mysql://localhost:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+#        url: jdbc:mysql://localhost:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+        url: jdbc:mysql://database-service:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
         username: root
         password: root
     jpa:
         hibernate:
-            ddl-auto: update
+#            ddl-auto: update
+            ddl-auto: none
         show-sql: true
         properties:
             hibernate:

@@ -62,3 +62,8 @@ dependencyManagement {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+bootBuildImage {
+	imageName = "springboot:latest"
+	createdDate = "now"
+}
