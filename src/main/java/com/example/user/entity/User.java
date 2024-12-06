@@ -40,6 +40,7 @@ public class User {
     @CreationTimestamp
     @Column(updatable = false, name="created_at")
     private LocalDateTime createdAt;
+
     @Column(name = "delete_request_at")
     private LocalDateTime deleteRequestAt;
 

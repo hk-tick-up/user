@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -31,33 +32,36 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors
-                        .configurationSource(corsConfigurationSource()) // 커스텀 CORS 설정
-                )
-                .csrf(csrf -> csrf.disable())  // CSRF 비활성화
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(
-                            urlPrefix+"/sign-in",
-                            urlPrefix+"/sign-up",
-                            urlPrefix+"/duplicateid",
-                            urlPrefix+"/duplicatenickname",
-                            urlPrefix+"/home",
-                            "/error"
+                                    "/ws/**",  // WebSocket 엔드포인트 추가
+                                    "/topic/**", // WebSocket Topic 추가
+                                    "/app/**",  // WebSocket Application Destination 추가
+                                    urlPrefix + "/sign-in",
+                                    urlPrefix + "/sign-up",
+                                    urlPrefix + "/duplicateid",
+                                    urlPrefix + "/duplicatenickname",
+                                    urlPrefix + "/home",
+                                    "/error"
                             ).permitAll()
                     .anyRequest().authenticated();
                 })
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exceptions -> {
-                    exceptions.authenticationEntryPoint((request, response, authException) -> {
-                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                        response.setContentType("application/json");
-                        response.getWriter().write("{\"message\": \"Unauthorized\"}");
-                    });
-                });
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"message\": \"Unauthorized\"}");
+                        })
+                );
+
         return http.build();
     }
 
@@ -65,9 +69,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE")); // 허용할 메서드
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // 허용할 헤더
-        configuration.setAllowCredentials(true); // 인증 정보 포함 여부
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
+        configuration.setExposedHeaders(List.of("Access-Control-Allow-Origin"));
+        configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

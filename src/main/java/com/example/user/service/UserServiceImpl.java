@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -71,9 +74,10 @@ public class UserServiceImpl implements UserDetailsService {
     }
     public String signIn(UserSigninDTO userDTO) {
         User user = userRepository.findById(userDTO.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
         if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
         boolean deletionRequested = user.getDeleteRequestAt() != null;
 
@@ -323,4 +327,11 @@ public class UserServiceImpl implements UserDetailsService {
         return optionalUser.map(User::getNickname).orElse(null);
     }
 
+    public User getUserById(String userId) throws Exception {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new Exception("User not found with id: " + userId);
+        }
+        return user;
+    }
 }

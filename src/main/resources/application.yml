@@ -1,22 +1,33 @@
 server:
     port: 8005
+    servlet:
+        session:
+            cookie:
+                secure: false
+                http-only: true
+                same-site: none
 spring:
     application:
         name: user
     datasource:
 #        url: jdbc:mysql://localhost:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
-        url: jdbc:mysql://database-service:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+#        url: jdbc:mysql://database-service:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+        url: jdbc:mysql://localhost:3307/tickup
+        driver-class-name: com.mysql.cj.jdbc.Driver
         username: root
-        password: root
+        password: root123
     jpa:
         hibernate:
 #            ddl-auto: update
             ddl-auto: none
         show-sql: true
-        properties:
-            hibernate:
-                format_sql: true
-                dialect: org.hibernate.dialect.MySQLDialect
+    kafka:
+        producer:
+            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#        properties:
+#            hibernate:
+#                format_sql: true
+#                dialect: org.hibernate.dialect.MySQLDialect
 logging:
     level:
         org:
