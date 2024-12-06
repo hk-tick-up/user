@@ -23,4 +23,5 @@ public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByNickname(String nickname);
 
     List<User> findAllByDeleteRequestAtBefore(LocalDateTime deleteRequestAtBefore);
+
 }

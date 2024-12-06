@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -58,6 +61,7 @@ public class UserServiceImpl implements UserDetailsService {
                 .job(user.job())
                 .point(0)
                 .build();
+
         newUser.getRoles().add(User.UserRole.ROLE_USER);
 
         try{
@@ -69,15 +73,44 @@ public class UserServiceImpl implements UserDetailsService {
             return "Error: Duplicated User";
         }
     }
-    public String signIn(UserSigninDTO userDTO) {
+    @Transactional
+    public ResponseEntity<?> signIn(UserSigninDTO user, HttpServletRequest request) {
+        try {
+            UserNameDTO authenticatedUser = authenticateUser(user);
+
+            if (authenticatedUser != null) {
+                // UserRole을 Set으로 생성
+                Set<User.UserRole> roles = new HashSet<>();
+                roles.add(User.UserRole.ROLE_USER);
+
+                String token = jwtTokenProvider.createToken(authenticatedUser.getId(), roles);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("token", token);
+                response.put("user", authenticatedUser);
+
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "로그인에 실패했습니다."));
+            }
+        } catch (Exception e) {
+            log.error("로그인 중 에러 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", e.getMessage()));
+        }
+    }
+    private UserNameDTO authenticateUser(UserSigninDTO userDTO) {
         User user = userRepository.findById(userDTO.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
         if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
         boolean deletionRequested = user.getDeleteRequestAt() != null;
 
         return jwtTokenProvider.createToken(user.getId(), user.getRoles(), deletionRequested);
+
     }
     public UserNameDTO self(Authentication authentication, HttpServletRequest request, HttpServletResponse response){
 //        log.warn(authentication.toString());
@@ -323,4 +356,11 @@ public class UserServiceImpl implements UserDetailsService {
         return optionalUser.map(User::getNickname).orElse(null);
     }
 
+    public User getUserById(String userId) throws Exception {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new Exception("User not found with id: " + userId);
+        }
+        return user;
+    }
 }
