@@ -13,7 +13,7 @@ java {
 	}
 }
 
-bootJar { enabled = false }
+//bootJar { enabled = false }
 jar {
 	enabled = true
 	archiveBaseName = 'user-service'
@@ -73,7 +73,13 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+tasks.named("bootBuildImage"){
+	dependsOn tasks.named("bootJar")
+}
 bootBuildImage {
 	imageName = "springboot:latest"
 	createdDate = "now"
 }
+//bootJar {
+//	enabled = true
+//}
