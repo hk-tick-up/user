@@ -28,8 +28,8 @@ spring:
 #            hibernate:
 #                format_sql: true
 #                dialect: org.hibernate.dialect.MySQLDialect
-logging:
-    level:
-        org:
-            springframework:
-                security: DEBUG
+#logging:
+#    level:
+#        org:
+#            springframework:
+#                security: DEBUG
