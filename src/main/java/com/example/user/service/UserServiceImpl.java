@@ -207,8 +207,14 @@ public class UserServiceImpl implements UserDetailsService {
         return optionalUser2.map(user -> getFriendDTOByOptionalUser(user, userId)).orElse(null);
     }
     private FriendDTO getFriendDTOByOptionalUser(User user, String userId) {
+        // user: 상대방
+        // userId: 인증계정 본인
+        if(user.getId().equals(userId)) {
+            return new FriendDTO(user.getId(), user.getNickname(), Friend.Status.YOU);
+        }
+
         Optional<Friend> friendship = friendRepository.findFriendByUserAndFriend(new User(userId), new User(user.getId()));
-        return friendship.map(friend -> new FriendDTO(user.getId(), user.getNickname(), friend.getStatus()))
+        return friendship.map(friend -> new FriendDTO(friend.getFriend().getId(), friend.getFriend().getNickname(), friend.getStatus()))
                 .orElseGet(() -> new FriendDTO(user.getId(), user.getNickname(), Friend.Status.NOTYET));
     }
 

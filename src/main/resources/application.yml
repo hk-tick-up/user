@@ -10,15 +10,15 @@ spring:
     application:
         name: user
     datasource:
-#        url: jdbc:mysql://localhost:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
-        url: jdbc:mysql://database-service:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+        url: jdbc:mysql://localhost:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+#        url: jdbc:mysql://database-service:3306/tickup?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
 #        url: jdbc:mysql://localhost:3307/tickup
         driver-class-name: com.mysql.cj.jdbc.Driver
         username: root
         password: root
 #        password: root123
     jpa:
-        database-platform: org.hibernate.dialect.H2Dialect
+        database-platform: org.hibernate.dialect.MySQL8Dialect
         hibernate:
 #            ddl-auto: update
             ddl-auto: none

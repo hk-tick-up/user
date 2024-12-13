@@ -18,7 +18,7 @@ import lombok.*;
 @AllArgsConstructor
 public class Friend {
     public static enum Status {
-        FRIEND, REQUEST, NOTYET
+        FRIEND, REQUEST, NOTYET, YOU
     }
 
     @Id
@@ -33,6 +33,7 @@ public class Friend {
     @JoinColumn(name = "friend")
     private User friend;
 
+    // status to user from friend
     @Enumerated(EnumType.STRING)
     private Status status;
 }
