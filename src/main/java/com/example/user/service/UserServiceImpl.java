@@ -207,13 +207,12 @@ public class UserServiceImpl implements UserDetailsService {
         return optionalUser2.map(user -> getFriendDTOByOptionalUser(user, userId)).orElse(null);
     }
     private FriendDTO getFriendDTOByOptionalUser(User user, String userId) {
-        // user: 상대방
-        // userId: 인증계정 본인
+        // 친구 요청: userId: 인증계정 본인 -> user: 상대방
         if(user.getId().equals(userId)) {
             return new FriendDTO(user.getId(), user.getNickname(), Friend.Status.YOU);
         }
 
-        Optional<Friend> friendship = friendRepository.findFriendByUserAndFriend(new User(userId), new User(user.getId()));
+        Optional<Friend> friendship = friendRepository.findFriendByUserAndFriend(new User(user.getId()), new User(userId));
         return friendship.map(friend -> new FriendDTO(friend.getFriend().getId(), friend.getFriend().getNickname(), friend.getStatus()))
                 .orElseGet(() -> new FriendDTO(user.getId(), user.getNickname(), Friend.Status.NOTYET));
     }
@@ -221,16 +220,26 @@ public class UserServiceImpl implements UserDetailsService {
     public List<FriendDTO> friends(String userId) {
         User user = new User(userId);
         List<Friend> friendEntities = friendRepository.getFriendsByUserAndStatus(user, Friend.Status.FRIEND);
-        return getFriendDTOS(friendEntities);
+        return getFriendDTOS(friendEntities, true);
     }
 
-    private List<FriendDTO> getFriendDTOS(List<Friend> friendEntities) {
+    private List<FriendDTO> getFriendDTOS(List<Friend> friendEntities, boolean isSend) {
         List<FriendDTO> friendDTOs = new ArrayList<>();
-        for(Friend friendEntity : friendEntities) {
-            User friend = friendEntity.getFriend();
-            friendDTOs.add(
-                    new FriendDTO(friend.getId(), friend.getNickname(), friendEntity.getStatus())
-            );
+        if(isSend) {
+            for(Friend friendEntity : friendEntities) {
+                User friend = friendEntity.getFriend();
+                friendDTOs.add(
+                        new FriendDTO(friend.getId(), friend.getNickname(), friendEntity.getStatus())
+                );
+            }
+        }
+        else{
+            for(Friend friendEntity : friendEntities) {
+                User user = friendEntity.getUser();
+                friendDTOs.add(
+                        new FriendDTO(user.getId(), user.getNickname(), friendEntity.getStatus())
+                );
+            }
         }
         return friendDTOs;
     }
@@ -266,10 +275,17 @@ public class UserServiceImpl implements UserDetailsService {
         }
     }
 
-    public List<FriendDTO> friendRequests(String userId) {
+    public List<FriendDTO> friendRequests(String userId, boolean isSend) {
         User user = new User(userId);
-        List<Friend> friendEntities = friendRepository.getFriendsByUserAndStatus(user, Friend.Status.REQUEST);
-        return getFriendDTOS(friendEntities);
+
+        List<Friend> friendEntities;
+        if(isSend) {
+            friendEntities = friendRepository.getFriendsByUserAndStatus(user, Friend.Status.REQUEST);
+        } else {
+            friendEntities = friendRepository.getFriendsByFriendAndStatus(user, Friend.Status.REQUEST);
+        }
+
+        return getFriendDTOS(friendEntities, isSend);
     }
 
     @Transactional
@@ -296,17 +312,15 @@ public class UserServiceImpl implements UserDetailsService {
         return null;
     }
 
-    public UserNameDTO deleteFriendRequest(String userId, Long requestId) {
-        Optional<Friend> friendOptional = friendRepository.deleteFriendByIdAndStatus(requestId, Friend.Status.REQUEST);
-        if(friendOptional.isPresent()) {
-            Friend friend = friendOptional.get();
-            if(friend.getUser().getId().equals(userId)) {
-                return new UserNameDTO(friend.getFriend().getId(), friend.getFriend().getNickname());
-            }
-        }
-        return null;
+    @Transactional
+    public UserNameDTO deleteFriendRequest(String userId, String targetId) {
+        Optional<String> targetNickname = friendRepository.getNicknameByUserId(targetId);
+        friendRepository.deleteFriendByUserAndFriendAndStatus(new User(userId), new User(targetId), Friend.Status.REQUEST);;
+
+        return new UserNameDTO(targetId, targetNickname.get());
     }
 
+    @Transactional
     public UserNameDTO deleteFriend(String userId, String friendId) {
         // 내 친구 삭제
         friendRepository.deleteFriendByUserAndFriendAndStatus(new User(userId), new User(friendId), Friend.Status.FRIEND);

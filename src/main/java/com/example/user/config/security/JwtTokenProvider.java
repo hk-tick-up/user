@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenProvider {
     private final String secretKey = "mysecretkeyhavetomovedoutsideofcodeandhavetochangedtorandomstring";
-    private final long validityInMilliseconds = 3600000; // 1시간
+    private final long validityInMilliseconds = 90L * 24 * 60 * 60 * 1000; // 90일
 
     public String createToken(String username, Set<User.UserRole> roles, boolean deletionRequested) {
         Claims claims = Jwts.claims().setSubject(username);

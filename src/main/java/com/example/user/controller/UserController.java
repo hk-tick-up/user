@@ -101,9 +101,9 @@ public class UserController {
         return userService.requestNewFriend(userId, friendId);
     }
     @GetMapping("/friend-requests")
-    public List<FriendDTO> friendRequests(Authentication authentication) {
+    public List<FriendDTO> friendRequests(Authentication authentication, @RequestParam(name = "send", required = false) boolean isSend) {
         String userId = authentication.getName();
-        return userService.friendRequests(userId);
+        return userService.friendRequests(userId, isSend);
     }
     @PostMapping("/friend-requests")
     public UserNameDTO acceptFriend(Authentication authentication, @RequestBody Map<String, String> request) {
@@ -111,10 +111,10 @@ public class UserController {
         String userId = authentication.getName();
         return userService.acceptFriend(userId, friendId);
     }
-    @DeleteMapping("/friend-requests/{requestId}")
-    public UserNameDTO deleteFriendRequest(Authentication authentication, @PathVariable Long requestId) {
+    @DeleteMapping("/friend-requests/{targetId}")
+    public UserNameDTO deleteFriendRequest(Authentication authentication, @PathVariable String targetId) {
         String userId = authentication.getName();
-        return userService.deleteFriendRequest(userId, requestId);
+        return userService.deleteFriendRequest(userId, targetId);
     }
     @DeleteMapping("/friends/{friendId}")
     public UserNameDTO deleteFriend(Authentication authentication, @PathVariable String friendId) {
