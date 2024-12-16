@@ -41,8 +41,8 @@ jobs:
 
     # 5. Gradle로 도커 이미지 생성
     - name: Build Docker Image using bootBuildImage
-      run: ./gradlew bootBuildImage --imageName=gksderrick/tickup-front:latest
+      run: ./gradlew bootBuildImage --imageName=gksderrick/tickup-backend-user:latest
 
     # 6. Docker Hub에 이미지 푸시
     - name: Push Docker Image
-      run: docker push gksderrick/tickup-front:latest
+      run: docker push gksderrick/tickup-backend-user:latest
