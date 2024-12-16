@@ -70,10 +70,22 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:3000");
         configuration.setAllowedOriginPatterns(List.of(
                 "http://192.168.1.6:3000",
                 "http://localhost:3000",
                 "http://192.168.45.113:3000"
+        ));
+//        configuration.addAllowedOrigin("http://ad4889ee54068407f80c1aae6b76331c-446234009.us-west-2.elb.amazonaws.com");
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(List.of("*"));
