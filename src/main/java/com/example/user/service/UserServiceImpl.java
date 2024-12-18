@@ -293,14 +293,19 @@ public class UserServiceImpl implements UserDetailsService {
         // user friend
         // friend user
         // 둘 다 status.friend로 바꾸어야 한다
-        Optional<Friend> userToFriend = friendRepository.findFriendByUserAndFriend(new User(userId), new User(friendId));
-        Optional<Friend> friendToUser = friendRepository.findFriendByUserAndFriend(new User(friendId), new User(userId));
+        Optional<Friend> friendToUser = friendRepository.findFriendByUserAndFriendAndStatus(new User(friendId), new User(userId), Friend.Status.REQUEST);
 
-        if(userToFriend.isPresent() && friendToUser.isPresent()) {
-            Friend utf = userToFriend.get();
+        if(friendToUser.isPresent()) {
+            Optional<Friend> userToFriend = friendRepository.findFriendByUserAndFriend(new User(userId), new User(friendId));
             Friend ftu = friendToUser.get();
-            utf.setStatus(Friend.Status.FRIEND);
+
+            Friend utf = userToFriend.orElseGet(() -> Friend.builder()
+                    .user(new User(userId))
+                    .friend(new User(friendId))
+                    .build());
+
             ftu.setStatus(Friend.Status.FRIEND);
+            utf.setStatus(Friend.Status.FRIEND);
             try {
                 friendRepository.save(utf);
                 friendRepository.save(ftu);
@@ -315,18 +320,18 @@ public class UserServiceImpl implements UserDetailsService {
     @Transactional
     public UserNameDTO deleteFriendRequest(String userId, String targetId) {
         Optional<String> targetNickname = friendRepository.getNicknameByUserId(targetId);
-        friendRepository.deleteFriendByUserAndFriendAndStatus(new User(userId), new User(targetId), Friend.Status.REQUEST);;
+        friendRepository.deleteFriendByUserAndFriendAndStatus(new User(targetId), new User(userId), Friend.Status.REQUEST);;
 
         return new UserNameDTO(targetId, targetNickname.get());
     }
 
     @Transactional
-    public UserNameDTO deleteFriend(String userId, String friendId) {
+    public String deleteFriend(String userId, String friendId) {
         // 내 친구 삭제
         friendRepository.deleteFriendByUserAndFriendAndStatus(new User(userId), new User(friendId), Friend.Status.FRIEND);
         // 상대 친구 삭제
         friendRepository.deleteFriendByUserAndFriendAndStatus(new User(friendId), new User(userId), Friend.Status.FRIEND);
-        return new UserNameDTO(userId, friendId);
+        return "Friendship deletion success";
     }
 
 //    public List<RewardDTO> rewards(String userId) {

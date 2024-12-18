@@ -117,7 +117,7 @@ public class UserController {
         return userService.deleteFriendRequest(userId, targetId);
     }
     @DeleteMapping("/friends/{friendId}")
-    public UserNameDTO deleteFriend(Authentication authentication, @PathVariable String friendId) {
+    public String deleteFriend(Authentication authentication, @PathVariable String friendId) {
         String userId = authentication.getName();
         return userService.deleteFriend(userId, friendId);
     }

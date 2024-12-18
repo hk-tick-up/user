@@ -43,6 +43,8 @@ public class SecurityConfig {
                     auth.requestMatchers(
                                     "/api/v1/users/sign-in",  // 로그인 엔드포인트 추가
                                     "/api/v1/users/sign-up",  // 회원가입 엔드포인트 추가
+                                    "/api/v1/users/duplicateid",
+                                    "/api/v1/users/duplicatenickname",
                                     "/ws/**",
                                     "/topic/**",
                                     "/app/**",
@@ -50,7 +52,9 @@ public class SecurityConfig {
                                     "/user/**",
                                     "/socket/**",
                                     "/game",
-                                    "/game/**"
+                                    "/game/**",
+                                    "/api/v1/users/study",
+                                    "/api/v1/users/study/**"
                             ).permitAll()
                             .anyRequest().authenticated();
                 })
@@ -63,7 +67,6 @@ public class SecurityConfig {
                                 path.startsWith("/api/v1/users/sign-in");
                     }
                 }, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
@@ -71,11 +74,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.setAllowedOriginPatterns(List.of(
-                "http://192.168.1.6:3000",
-                "http://localhost:3000",
-                "http://192.168.45.113:3000"
-        ));
+//        configuration.setAllowedOriginPatterns(List.of(
+//                "http://192.168.1.6:3000",
+//                "http://localhost:3000",
+//                "http://192.168.45.113:3000"
+//        ));
 //        configuration.addAllowedOrigin("http://ad4889ee54068407f80c1aae6b76331c-446234009.us-west-2.elb.amazonaws.com");
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
@@ -87,8 +90,6 @@ public class SecurityConfig {
                 "Access-Control-Request-Method",
                 "Access-Control-Request-Headers"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Access-Control-Allow-Origin"));
         configuration.setAllowCredentials(true);
 
