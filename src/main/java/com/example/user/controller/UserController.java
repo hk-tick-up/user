@@ -1,9 +1,6 @@
 package com.example.user.controller;
 
-import com.example.user.dto.FriendDTO;
-import com.example.user.dto.UserNameDTO;
-import com.example.user.dto.UserSigninDTO;
-import com.example.user.dto.UserSignupDTO;
+import com.example.user.dto.*;
 import com.example.user.entity.User;
 import com.example.user.service.UserServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -142,4 +139,8 @@ public class UserController {
 //        String userId = authentication.getName();
 //        return userService.points(userId);
 //    }
+    @GetMapping("/profile/{userId}")
+    public ProfileDTO getProfile(@PathVariable String userId) {
+        return userService.getProfile(userId);
+    }
 }

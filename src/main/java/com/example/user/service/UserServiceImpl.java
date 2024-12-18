@@ -346,6 +346,18 @@ public class UserServiceImpl implements UserDetailsService {
 //
 //    public int points(String userId) {
 //    }
+    public ProfileDTO getProfile(String userId) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if(optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            return new ProfileDTO(
+                    userId,
+                    user.getNickname(),
+                    user.getPoint()
+                    );
+        }
+        return null;
+    }
 
     public String getNickname(String userId) {
         Optional<User> optionalUser = userRepository.findById(userId);
